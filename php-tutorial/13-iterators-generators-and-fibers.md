@@ -325,7 +325,8 @@ on an infinite (or merely huge) source at all.
   the keys: keys repeat when generators are combined (`yield from`, below), and later values overwrite earlier ones.
 - `iterator_count($it)` consumes an iterator and counts its elements.
 - `iterator_apply()` calls a function for each element.
-- Since PHP 8.2 all three accept arrays too, so they work on any `iterable`.
+- Since PHP 8.2, `iterator_to_array()` and `iterator_count()` accept arrays too, so they work on any `iterable`.
+  `iterator_apply()` still requires a `Traversable`.
 
 ### `yield from`
 

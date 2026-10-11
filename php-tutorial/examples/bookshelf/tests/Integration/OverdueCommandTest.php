@@ -10,6 +10,7 @@ use Bookshelf\Cli\Input;
 use Bookshelf\Cli\Output;
 use Bookshelf\Domain\MemberType;
 use Bookshelf\Lending\LendingService;
+use Bookshelf\Lending\OverdueReport;
 use Bookshelf\Persistence\PdoBookRepository;
 use Bookshelf\Persistence\PdoLoanRepository;
 use Bookshelf\Persistence\PdoMemberRepository;
@@ -20,6 +21,7 @@ use DateTimeZone;
 use PHPUnit\Framework\Attributes\CoversClass;
 
 #[CoversClass(OverdueCommand::class)]
+#[CoversClass(OverdueReport::class)]
 final class OverdueCommandTest extends DatabaseTestCase
 {
     use Builders;
@@ -39,7 +41,7 @@ final class OverdueCommandTest extends DatabaseTestCase
         $loans = new PdoLoanRepository($pdo, new DateTimeZone('Europe/Berlin'));
         $this->clock = FrozenClock::at('2026-10-11 10:00', 'Europe/Berlin');
         $this->lending = new LendingService($this->database, $this->books, $this->members, $loans, $this->clock);
-        $this->command = new OverdueCommand($loans, $this->books, $this->members, $this->clock);
+        $this->command = new OverdueCommand(new OverdueReport($loans, $this->books, $this->members), $this->clock);
     }
 
     public function testReportsNothingWhenNoLoanIsLate(): void

@@ -96,6 +96,12 @@ final class Loan
             ->min(Money::cents(self::FINE_CAP_CENTS));
     }
 
+    /** Whether renew() would succeed today, e.g. to show or hide a Renew button. */
+    public function canBeRenewed(DateTimeImmutable $today): bool
+    {
+        return !$this->isReturned && $this->daysOverdue($today) === 0 && $this->renewals < self::MAX_RENEWALS;
+    }
+
     public function renew(DateTimeImmutable $today): void
     {
         if ($this->isReturned) {

@@ -24,7 +24,9 @@ use Bookshelf\Web\Controller;
 use Bookshelf\Web\Dispatcher;
 use Bookshelf\Web\Kernel;
 use Bookshelf\Web\Middleware;
+use Bookshelf\Web\NativeSessionStorage;
 use Bookshelf\Web\Session;
+use Bookshelf\Web\SessionStorage;
 use Bookshelf\Web\View;
 
 $root = dirname(__DIR__);
@@ -50,7 +52,8 @@ $container->set(MemberRepository::class, fn (Container $c) => $c->get(PdoMemberR
 $container->set(LoanRepository::class, fn (Container $c) => $c->get(PdoLoanRepository::class));
 
 // The web application
-$container->set(Session::class, fn () => new Session(secureCookie: $settings['https']));
+// Session itself is autowired; tests replace the storage with an in-memory one.
+$container->set(SessionStorage::class, fn () => new NativeSessionStorage(secureCookie: $settings['https']));
 $container->set(View::class, fn (Container $c) => new View("$root/templates", $c->get(Session::class)));
 
 $container->set(Router::class, function (): Router {
@@ -59,6 +62,7 @@ $container->set(Router::class, function (): Router {
     $router->addController(Controller\SuggestionController::class);
     $router->addController(Controller\AuthController::class);
     $router->addController(Controller\LoanController::class);
+    $router->addController(Controller\DeskController::class);
     $router->addController(Controller\HealthController::class);
 
     return $router;

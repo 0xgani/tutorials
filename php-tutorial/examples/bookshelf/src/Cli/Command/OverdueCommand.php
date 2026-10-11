@@ -8,11 +8,8 @@ use Bookshelf\Cli\Command;
 use Bookshelf\Cli\ExitCode;
 use Bookshelf\Cli\Input;
 use Bookshelf\Cli\Output;
-use Bookshelf\Domain\BookRepository;
-use Bookshelf\Domain\Loan;
-use Bookshelf\Domain\LoanRepository;
-use Bookshelf\Domain\Member;
-use Bookshelf\Domain\MemberRepository;
+use Bookshelf\Lending\OverdueLoan;
+use Bookshelf\Lending\OverdueReport;
 use Bookshelf\Support\Clock;
 
 /**
@@ -22,9 +19,7 @@ use Bookshelf\Support\Clock;
 final readonly class OverdueCommand implements Command
 {
     public function __construct(
-        private LoanRepository $loans,
-        private BookRepository $books,
-        private MemberRepository $members,
+        private OverdueReport $report,
         private Clock $clock,
     ) {
     }
@@ -54,24 +49,14 @@ final readonly class OverdueCommand implements Command
 
     public function run(Input $input, Output $output): ExitCode
     {
-        $today = $this->clock->now();
-        $overdue = $this->loans->overdue($today);
-        $books = $this->books->findByIds(array_map(fn (Loan $loan): int => $loan->bookId, $overdue));
-
-        /** @var array<int, Member> $members */
-        $members = [];
-        $rows = [];
-        foreach ($overdue as $loan) {
-            $member = $members[$loan->memberId] ??= $this->members->get($loan->memberId);
-            $rows[] = [
-                'loan' => $loan->id,
-                'due' => $loan->dueOn->format('Y-m-d'),
-                'days' => $loan->daysOverdue($today),
-                'fine' => $loan->fine($today)->format(),
-                'title' => $books[$loan->bookId]->title ?? "(book {$loan->bookId})",
-                'member' => $member->email,
-            ];
-        }
+        $rows = array_map(fn (OverdueLoan $late): array => [
+            'loan' => $late->loanId,
+            'due' => $late->dueOn->format('Y-m-d'),
+            'days' => $late->daysOverdue,
+            'fine' => $late->fine->format(),
+            'title' => $late->title,
+            'member' => $late->memberEmail,
+        ], $this->report->on($this->clock->now()));
 
         if ($input->flag('json')) {
             $output->json($rows);

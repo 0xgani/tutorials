@@ -25,6 +25,7 @@
         <?php else: ?>
             <a href="/loans">My loans</a>
             <?php if ($member->isStaff()): ?>
+                <a href="/desk">Lending desk</a>
                 <a href="/suggestions">Suggestions</a>
             <?php endif; ?>
             <form method="post" action="/logout" class="inline">

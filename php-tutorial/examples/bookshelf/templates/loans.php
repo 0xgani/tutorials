@@ -10,7 +10,7 @@
 <?php else: ?>
     <table>
         <thead>
-        <tr><th>Title</th><th>Due</th><th>Status</th></tr>
+        <tr><th>Title</th><th>Due</th><th>Status</th><th>Fine so far</th><th></th></tr>
         </thead>
         <tbody>
         <?php foreach ($loans as $loan): ?>
@@ -18,6 +18,15 @@
                 <td><?= e($books[$loan->bookId]->title ?? 'Unknown book') ?></td>
                 <td><?= e($loan->dueOn->format('D j M Y')) ?></td>
                 <td><?= e($loan->status($today)->label()) ?></td>
+                <td><?= e($loan->fine($today)->isZero() ? '–' : $loan->fine($today)->format()) ?></td>
+                <td>
+                    <?php if ($loan->canBeRenewed($today)): ?>
+                        <form method="post" action="/loans/<?= e($loan->id) ?>/renew" class="inline">
+                            <?= $csrfField() ?>
+                            <button>Renew</button>
+                        </form>
+                    <?php endif; ?>
+                </td>
             </tr>
         <?php endforeach; ?>
         </tbody>

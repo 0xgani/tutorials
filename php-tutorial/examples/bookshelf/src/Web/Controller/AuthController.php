@@ -9,6 +9,7 @@ use Bookshelf\Http\Response;
 use Bookshelf\Http\Route;
 use Bookshelf\Security\AuthenticationFailed;
 use Bookshelf\Security\Authenticator;
+use Bookshelf\Support\Clock;
 use Bookshelf\Web\Session;
 use Bookshelf\Web\View;
 
@@ -18,6 +19,7 @@ final readonly class AuthController
         private Authenticator $authenticator,
         private Session $session,
         private View $view,
+        private Clock $clock,
     ) {
     }
 
@@ -51,7 +53,7 @@ final readonly class AuthController
 
         $this->session->regenerate();           // a new ID for the new privilege level
         $this->session->set('member_id', $member->id);
-        $this->session->set('last_seen', time());
+        $this->session->set('last_seen', $this->clock->now()->getTimestamp());   // the clock the idle check uses
         $this->session->renewCsrfToken();
         $this->session->flash("Welcome back, {$member->name}.");
 

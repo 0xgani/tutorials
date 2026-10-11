@@ -80,6 +80,17 @@ final class LoanTest extends TestCase
         $loan->renew(self::day('2026-11-05'));
     }
 
+    public function testCanBeRenewedAgreesWithRenew(): void
+    {
+        $loan = $this->loan(MemberType::Standard, lentOn: '2026-10-11');   // due 2026-11-01
+
+        self::assertTrue($loan->canBeRenewed(self::day('2026-10-12')));
+        self::assertFalse($loan->canBeRenewed(self::day('2026-11-02')));   // overdue
+        $loan->renew(self::day('2026-10-12'));
+        $loan->renew(self::day('2026-10-12'));
+        self::assertFalse($loan->canBeRenewed(self::day('2026-10-12')));   // renewed twice already
+    }
+
     private static function day(string $date): DateTimeImmutable
     {
         return new DateTimeImmutable($date);
