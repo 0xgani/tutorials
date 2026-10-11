@@ -28,7 +28,7 @@
                 <a href="/suggestions">Suggestions</a>
             <?php endif; ?>
             <form method="post" action="/logout" class="inline">
-                <?= csrfField() ?>
+                <?= $csrfField() ?>
                 <button class="link">Log out <?= e($member->name) ?></button>
             </form>
         <?php endif; ?>

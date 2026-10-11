@@ -28,7 +28,7 @@ use Bookshelf\Domain\Genre;
         <tbody>
         <?php foreach ($books as $book): ?>
             <tr>
-                <td><?= e($book->title) ?></td>
+                <td><a href="/books/<?= e($book->id) ?>"><?= e($book->title) ?></a></td>
                 <td><?= e($book->author) ?></td>
                 <td><?= e($book->genre?->label()) ?></td>
                 <td><?= e($book->year) ?></td>

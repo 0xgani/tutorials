@@ -9,7 +9,7 @@
     <p class="error"><?= e($error) ?></p>
 <?php endif; ?>
 <form method="post" action="/login" class="stacked">
-    <?= csrfField() ?>
+    <?= $csrfField() ?>
     <input type="hidden" name="next" value="<?= e($next) ?>">
     <label>E-mail address
         <input type="email" name="email" value="<?= e($email) ?>" autocomplete="username" required>

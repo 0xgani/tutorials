@@ -14,7 +14,7 @@ $field = function (string $name, string $label, string $type = 'text') use ($val
 ?>
 <p>Missing a book? Tell us, and we'll consider buying it.</p>
 <form method="post" action="/suggest" class="stacked">
-    <?= csrfField() ?>
+    <?= $csrfField() ?>
     <?= $field('title', 'Title') ?>
     <?= $field('author', 'Author') ?>
     <?= $field('isbn', 'ISBN-13 (optional)') ?>

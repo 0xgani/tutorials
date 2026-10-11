@@ -14,3 +14,6 @@ th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd
 .flash { background: #e6f4ea; border-left: 4px solid #2d4a3e; padding: 0.5rem 1rem; }
 form.inline { display: inline; }
 button.link { background: none; border: none; padding: 0; color: #fff; font: inherit; cursor: pointer; }
+.details { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1.5rem; }
+.details dt { font-weight: bold; }
+.details dd { margin: 0; }
