@@ -1,0 +1,14 @@
+:root { font-family: system-ui, sans-serif; line-height: 1.5; color: #222; }
+body { margin: 0; }
+header { display: flex; gap: 2rem; align-items: center; padding: 0.75rem 1.5rem; background: #2d4a3e; }
+header a { color: #fff; text-decoration: none; }
+.brand { font-weight: bold; font-size: 1.2rem; }
+nav { display: flex; gap: 1rem; }
+main { max-width: 60rem; margin: 0 auto; padding: 1rem 1.5rem; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: 0.4rem 0.6rem; border-bottom: 1px solid #ddd; }
+.search { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.stacked { display: grid; gap: 0.75rem; max-width: 30rem; }
+.stacked label { display: grid; gap: 0.25rem; }
+.error { color: #b00020; font-size: 0.9rem; }
+.flash { background: #e6f4ea; border-left: 4px solid #2d4a3e; padding: 0.5rem 1rem; }
