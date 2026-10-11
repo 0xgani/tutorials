@@ -1,0 +1,24 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Bookshelf\Cli\Application;
+use Bookshelf\Cli\Command\ImportBooksCommand;
+use Bookshelf\Cli\Command\IsbnCommand;
+use Bookshelf\Cli\Output;
+use Bookshelf\Import\CsvBookReader;
+
+if (PHP_SAPI !== 'cli') {
+    exit('This program runs from the command line only.');
+}
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$app = new Application(
+    'bookshelf',
+    new ImportBooksCommand(new CsvBookReader()),
+    new IsbnCommand(),
+);
+
+exit($app->run($argv, new Output()));

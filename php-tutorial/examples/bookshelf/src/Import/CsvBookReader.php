@@ -32,6 +32,10 @@ final class CsvBookReader
 
         try {
             $header = fgetcsv($handle, escape: '');
+            if ($header !== false) {
+                // Spreadsheet programs often start UTF-8 files with a byte-order mark. It is not part of the text.
+                $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $header[0]);
+            }
             if ($header === false || array_map(trim(...), $header) !== self::COLUMNS) {
                 throw new RuntimeException('Expected the header ' . implode(',', self::COLUMNS));
             }

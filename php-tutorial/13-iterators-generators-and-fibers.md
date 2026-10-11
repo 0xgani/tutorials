@@ -695,6 +695,10 @@ final class CsvBookReader
 
         try {
             $header = fgetcsv($handle, escape: '');
+            if ($header !== false) {
+                // Spreadsheet programs often start UTF-8 files with a byte-order mark. It is not part of the text.
+                $header[0] = preg_replace('/^\xEF\xBB\xBF/', '', (string) $header[0]);
+            }
             if ($header === false || array_map(trim(...), $header) !== self::COLUMNS) {
                 throw new RuntimeException('Expected the header ' . implode(',', self::COLUMNS));
             }
@@ -752,6 +756,8 @@ final class CsvBookReader
 - The header check throws inside the generator, so it surfaces on the first iteration, not when `read()` is called.
   That is normal generator behavior and worth remembering when you write tests.
 - `fgetcsv()` returns `[null]` for a blank line.
+- A **byte-order mark** (three invisible bytes that Excel and other spreadsheet programs put at the start of UTF-8
+  files) is removed from the header, otherwise the first column name would be `"\xEF\xBB\xBFtitle"`.
 - Every value from the file passes through the boundary rules from chapter 7: `Genre::tryFrom()`, a validated integer
   parser, and the `Isbn` and `Book` constructors.
 
