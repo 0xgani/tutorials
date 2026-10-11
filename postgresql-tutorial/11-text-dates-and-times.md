@@ -1525,6 +1525,7 @@ DROP TABLE newsletter_signups;
 ```
 
 ```text
+NOTICE:  collation "case_insensitive" already exists, skipping
 CREATE COLLATION
 CREATE TABLE
 INSERT 0 1
@@ -1538,9 +1539,10 @@ DETAIL:  Key (email)=(ana@example.com) already exists.
 DROP TABLE
 ```
 
-The primary key's index uses the column's collation, so uniqueness is case-insensitive, and so is `=` in the lookup.
-The stored value keeps the case the user typed. The alternative designs are a `citext` column, or a plain column plus
-a unique index on `casefold(email)` (chapter 15).
+The `NOTICE` appears because the chapter already created the collation; `IF NOT EXISTS` makes the script work either
+way. The primary key's index uses the column's collation, so uniqueness is case-insensitive, and so is `=` in the
+lookup. The stored value keeps the case the user typed. The alternative designs are a `citext` column, or a plain
+column plus a unique index on `casefold(email)` (chapter 15).
 
 </details>
 

@@ -1236,9 +1236,12 @@ node --env-file=.env scripts/order-worker.js
 
 ```text
 waiting for orders
-to Ben Carter <ben@example.com>: thank you for order 14, total 10.00
-to Farah Haddad <farah@example.com>: thank you for order 15, total 30.00
+to Ben Carter <ben@example.com>: thank you for order 15, total 10.00
+to Farah Haddad <farah@example.com>: thank you for order 16, total 30.00
 ```
+
+(There is no order 14: the sold-out attempt in the tour took that id from the sequence before `place_order()` failed,
+and a rollback never gives sequence values back, chapter 4.)
 
 It works while it runs. But notifications are only delivered to sessions that are listening at that moment (chapter
 19). Orders placed while the worker is stopped, crashed or reconnecting are never confirmed, and nothing tells you.
@@ -1337,17 +1340,17 @@ workers in two terminals, and place six more orders. Each order is confirmed exa
 picked up at startup:
 
 ```text
-[14048] to Ana Souza <ana@example.com>: thank you for order 16
+[14048] to Ana Souza <ana@example.com>: thank you for order 17
 [14048] waiting for orders
-[14048] to Chloé Martin <chloe@example.com>: thank you for order 18
-[14048] to Dev Patel <dev@example.com>: thank you for order 19
+[14048] to Chloé Martin <chloe@example.com>: thank you for order 19
+[14048] to Dev Patel <dev@example.com>: thank you for order 20
 ...
 ```
 
 ```text
-[14050] to Ben Carter <ben@example.com>: thank you for order 17
+[14050] to Ben Carter <ben@example.com>: thank you for order 18
 [14050] waiting for orders
-[14050] to Emma Schulz-Berg <emma@example.com>: thank you for order 20
+[14050] to Emma Schulz-Berg <emma@example.com>: thank you for order 21
 ```
 
 The order of `LISTEN` and the first `drain()` matters: draining first and listening afterwards would miss an order

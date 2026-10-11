@@ -1099,7 +1099,7 @@ A **connection pooler** sits between the applications and PostgreSQL. Thousands 
 dozen server connections go out. The most widely used is **PgBouncer**; others include PgCat, Odyssey, Supavisor and
 the proxies of cloud providers. A minimal `pgbouncer.ini`:
 
-```text
+```ini
 [databases]
 inkwell = host=127.0.0.1 port=5432 dbname=inkwell
 
@@ -1132,9 +1132,11 @@ different server connections. Anything that lives in the **session** across tran
 - **Session-level advisory locks** (`pg_advisory_lock`) may be unlocked on a different connection than they were
   taken on; use the transaction-level ones (chapter 17), or run the migration runner directly against PostgreSQL.
 - **Temporary tables** and **`WITH HOLD` cursors** disappear or turn up elsewhere.
-- **Prepared statements**: SQL-level `PREPARE` doesn't work. Protocol-level named prepared statements (PDO prepares
-  every statement that way by default) work with PgBouncer 1.21+ when `max_prepared_statements` is set; with older
-  poolers, turn them off (`PDO::ATTR_EMULATE_PREPARES => true`, which makes PDO send values inside the SQL text,
+- **Prepared statements**: SQL-level `PREPARE` is passed straight through, so a later `EXECUTE` may land on a server
+  connection that never saw it. Protocol-level named prepared statements (PDO prepares every statement that way by
+  default) are tracked by PgBouncer 1.21+ when `max_prepared_statements` is above zero (it is 200 by default since
+  1.24). With it set to 0, or with older poolers, PDO fails with `prepared statement "pdo_stmt_00000001" does not
+  exist`; turn them off there (`PDO::ATTR_EMULATE_PREPARES => true`, which makes PDO send values inside the SQL text,
   escaped by the driver). `pg` uses unnamed statements unless you give a query a `name`, so it's unaffected.
 
 Many applications use both: the web app through PgBouncer in transaction mode, and migrations, listeners and admin
