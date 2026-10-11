@@ -217,8 +217,9 @@ it, nobody can change it. When every property of a class is readonly, you can de
 Note that readonly is **shallow**: a readonly property holding an object prevents replacing the object, not modifying
 it. A readonly `array` property is fully immutable, because arrays are values.
 
-(One detail you may meet in error messages: since PHP 8.4, a readonly property may only be written from the class's own
-scope, as if it were `protected(set)`. Writing it from outside gives "Cannot modify protected(set) readonly property".)
+(One detail you may meet in error messages: since PHP 8.4, a readonly property is implicitly `protected(set)`, meaning
+it may only be initialized from inside the class or its subclasses. Some errors, such as the PHP 8.5 clone-with case in
+chapter 11, mention "protected(set) readonly property" for that reason.)
 
 ## Static members
 
