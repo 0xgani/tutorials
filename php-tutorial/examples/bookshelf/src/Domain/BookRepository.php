@@ -15,6 +15,14 @@ interface BookRepository
     public function findByIsbn(Isbn $isbn): ?Book;
 
     /**
+     * The books with the given ids, keyed by id, in one query. Unknown ids are left out.
+     *
+     * @param list<int> $ids
+     * @return array<int, Book>
+     */
+    public function findByIds(array $ids): array;
+
+    /**
      * Books whose title or author contains $text (case-insensitively), optionally of one genre, by title.
      *
      * @return list<Book>

@@ -38,6 +38,25 @@ final readonly class PdoBookRepository implements BookRepository
         return $row === false ? null : $this->toBook($row);
     }
 
+    public function findByIds(array $ids): array
+    {
+        $ids = array_values(array_unique($ids));
+        if ($ids === []) {
+            return [];
+        }
+
+        $placeholders = implode(', ', array_fill(0, count($ids), '?'));
+        $statement = $this->pdo->prepare('SELECT ' . self::COLUMNS . " FROM books WHERE id IN ($placeholders)");
+        $statement->execute($ids);
+
+        $books = [];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $books[$row['id']] = $this->toBook($row);
+        }
+
+        return $books;
+    }
+
     public function search(string $text = '', ?Genre $genre = null, int $limit = 50, int $offset = 0): array
     {
         [$where, $parameters] = $this->filter($text, $genre);

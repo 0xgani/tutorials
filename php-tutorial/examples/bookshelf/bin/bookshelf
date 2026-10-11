@@ -8,6 +8,7 @@ use Bookshelf\Cli\Command\AddMemberCommand;
 use Bookshelf\Cli\Command\ImportBooksCommand;
 use Bookshelf\Cli\Command\IsbnCommand;
 use Bookshelf\Cli\Command\MigrateCommand;
+use Bookshelf\Cli\Command\SetPasswordCommand;
 use Bookshelf\Cli\Output;
 use Bookshelf\Import\CsvBookReader;
 use Bookshelf\Persistence\Database;
@@ -23,12 +24,14 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 
 $root = dirname(__DIR__);
 $database = Database::fromEnvironment($root);
+$members = new PdoMemberRepository($database->pdo);
 
 $app = new Application(
     'bookshelf',
     new MigrateCommand(new Migrator($database, "$root/migrations")),
     new ImportBooksCommand(new CsvBookReader(), new PdoBookRepository($database->pdo), $database),
-    new AddMemberCommand(new PdoMemberRepository($database->pdo)),
+    new AddMemberCommand($members),
+    new SetPasswordCommand($members),
     new IsbnCommand(),
 );
 

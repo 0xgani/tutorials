@@ -43,6 +43,12 @@ final class Output
         fwrite($this->stderr, $text . PHP_EOL);
     }
 
+    /** A question for the human, on STDERR, without a line break so the answer is typed after it. */
+    public function prompt(string $text): void
+    {
+        fwrite($this->stderr, $text);
+    }
+
     public function warning(string $text): void
     {
         $this->info($this->paint($text, '33'));

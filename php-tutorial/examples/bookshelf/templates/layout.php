@@ -1,6 +1,7 @@
 <?php
 /**
  * @var string $title
+ * @var ?Bookshelf\Domain\Member $member  the logged-in member
  * @var ?string $flash
  * @var string $content  already-escaped HTML from the page template
  */
@@ -19,6 +20,18 @@
     <nav>
         <a href="/">Catalog</a>
         <a href="/suggest">Suggest a book</a>
+        <?php if ($member === null): ?>
+            <a href="/login">Log in</a>
+        <?php else: ?>
+            <a href="/loans">My loans</a>
+            <?php if ($member->isStaff()): ?>
+                <a href="/suggestions">Suggestions</a>
+            <?php endif; ?>
+            <form method="post" action="/logout" class="inline">
+                <?= csrfField() ?>
+                <button class="link">Log out <?= e($member->name) ?></button>
+            </form>
+        <?php endif; ?>
     </nav>
 </header>
 <main>

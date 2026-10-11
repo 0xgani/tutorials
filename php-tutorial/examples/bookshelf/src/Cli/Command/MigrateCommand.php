@@ -38,7 +38,12 @@ final readonly class MigrateCommand implements Command
         foreach ($applied as $file) {
             $output->info("applied $file");
         }
-        $output->success($applied === [] ? 'The database is up to date' : sprintf('%d migrations applied', count($applied)));
+        $count = count($applied);
+        $output->success(match ($count) {
+            0 => 'The database is up to date',
+            1 => '1 migration applied',
+            default => "$count migrations applied",
+        });
 
         return ExitCode::Success;
     }
