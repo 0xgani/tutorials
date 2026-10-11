@@ -1023,21 +1023,23 @@ privileges. So **every `SECURITY DEFINER` function must set its own `search_path
 ```sql
 ALTER FUNCTION place_order(bigint, jsonb)
     SECURITY DEFINER
-    SET search_path = pg_catalog, public;
+    SET search_path = pg_catalog, public, pg_temp;
 
 SELECT proname, prosecdef, proconfig FROM pg_proc WHERE proname = 'place_order';
 ```
 
 ```text
 ALTER FUNCTION
-   proname   | prosecdef |             proconfig
--------------+-----------+------------------------------------
- place_order | t         | {"search_path=pg_catalog, public"}
+   proname   | prosecdef |                  proconfig
+-------------+-----------+---------------------------------------------
+ place_order | t         | {"search_path=pg_catalog, public, pg_temp"}
 (1 row)
 ```
 
 Putting `pg_catalog` first means the built-in functions and operators can't be overridden; the shop's own schema
-comes next. (Make sure ordinary users can't create objects in that schema: in PostgreSQL 15+, they can't create in
+comes next. `pg_temp` goes **last on purpose**: every session can create temporary tables, and when `pg_temp` isn't
+listed at all it is searched *first* for tables, so a caller could shadow `orders` with a temporary table of their own
+(chapter 21 demonstrates it). (Make sure ordinary users can't create objects in that schema: in PostgreSQL 15+, they can't create in
 `public` by default.) Also note that **`EXECUTE` on a new function is granted to `PUBLIC`** by default. For a security
 definer function, revoke that and grant it only to the roles that need it:
 
