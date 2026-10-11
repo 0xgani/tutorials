@@ -14,12 +14,12 @@ final class Text
         return $title
             |> trim(...)
             |> mb_strtolower(...)
-            |> (fn (string $s): string => preg_replace('/[^\p{L}\p{N}]+/u', '-', $s))
+            |> (fn (string $s): string => preg_replace('/[^\p{L}\p{N}]+/u', '-', $s) ?? $s)
             |> (fn (string $s): string => trim($s, '-'));
     }
 
     public static function isValidIsbn13(string $input): bool
     {
-        return Isbn::isValid(preg_replace('/[\s-]+/', '', $input));
+        return Isbn::isValid(preg_replace('/[\s-]+/', '', $input) ?? '');
     }
 }

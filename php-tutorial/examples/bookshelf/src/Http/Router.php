@@ -64,7 +64,7 @@ final class Router
             );
         }
 
-        throw $allowed === [] ? HttpException::notFound() : HttpException::methodNotAllowed(array_unique($allowed));
+        throw $allowed === [] ? HttpException::notFound() : HttpException::methodNotAllowed(array_values(array_unique($allowed)));
     }
 
     /** Turns '/books/{id:\d+}' into '~^/books/(?P<id>\d+)$~'. */

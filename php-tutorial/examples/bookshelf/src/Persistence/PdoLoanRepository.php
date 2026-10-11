@@ -11,6 +11,7 @@ use Bookshelf\Domain\Money;
 use DateTimeImmutable;
 use DateTimeZone;
 use PDO;
+use UnexpectedValueException;
 
 /**
  * Loans store calendar dates as 'YYYY-MM-DD' text; they are rebuilt at midnight in the library's time zone.
@@ -41,7 +42,7 @@ final readonly class PdoLoanRepository implements LoanRepository
         );
         $statement->execute([$memberId]);
 
-        return array_map($this->toLoan(...), $statement->fetchAll(PDO::FETCH_ASSOC));
+        return array_values(array_map($this->toLoan(...), $statement->fetchAll(PDO::FETCH_ASSOC)));
     }
 
     public function overdue(DateTimeImmutable $today): array
@@ -51,7 +52,7 @@ final readonly class PdoLoanRepository implements LoanRepository
         );
         $statement->execute([$today->setTimezone($this->timezone)->format('Y-m-d')]);
 
-        return array_map($this->toLoan(...), $statement->fetchAll(PDO::FETCH_ASSOC));
+        return array_values(array_map($this->toLoan(...), $statement->fetchAll(PDO::FETCH_ASSOC)));
     }
 
     public function save(Loan $loan): void
@@ -100,6 +101,7 @@ final readonly class PdoLoanRepository implements LoanRepository
 
     private function date(string $value): DateTimeImmutable
     {
-        return DateTimeImmutable::createFromFormat('!Y-m-d', $value, $this->timezone);
+        return DateTimeImmutable::createFromFormat('!Y-m-d', $value, $this->timezone)
+            ?: throw new UnexpectedValueException("Invalid date '$value' in the loans table");
     }
 }

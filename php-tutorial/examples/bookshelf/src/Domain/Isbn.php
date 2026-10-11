@@ -17,7 +17,7 @@ final readonly class Isbn implements JsonSerializable, Stringable
 
     public function __construct(string $input)
     {
-        $digits = preg_replace('/[\s-]+/', '', $input);
+        $digits = preg_replace('/[\s-]+/', '', $input) ?? '';   // null only if the regex engine fails
         if (!self::isValid($digits)) {
             throw new InvalidArgumentException("Invalid ISBN-13: '$input'");
         }

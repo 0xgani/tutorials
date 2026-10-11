@@ -29,7 +29,9 @@ final readonly class Migrator
             version    TEXT PRIMARY KEY,
             applied_at TEXT NOT NULL
         )');
-        $done = array_flip($pdo->query('SELECT version FROM schema_migrations')->fetchAll(\PDO::FETCH_COLUMN));
+        $versions = $pdo->prepare('SELECT version FROM schema_migrations');
+        $versions->execute();
+        $done = array_flip($versions->fetchAll(\PDO::FETCH_COLUMN));
 
         $applied = [];
         foreach ($this->pending($done) as $version => $file) {

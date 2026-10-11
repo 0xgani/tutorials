@@ -32,7 +32,7 @@ final readonly class SuggestionStore
             ]);
     }
 
-    /** @return list<array{created_at: string, title: string, author: string, isbn: ?string, reason: string}> */
+    /** @return list<array<string, mixed>> rows with created_at, title, author, isbn and reason */
     public function latest(int $limit = 100): array
     {
         $statement = $this->pdo->prepare(
@@ -41,6 +41,6 @@ final readonly class SuggestionStore
         $statement->bindValue(1, $limit, PDO::PARAM_INT);
         $statement->execute();
 
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
+        return array_values($statement->fetchAll(PDO::FETCH_ASSOC));
     }
 }

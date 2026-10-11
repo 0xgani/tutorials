@@ -38,8 +38,8 @@ Chapter 1 shows how to install PHP on macOS, Linux and Windows.
 - **Read in order.** Each chapter builds on the previous ones, and the running example grows as you go.
 - **Type the examples and run them.** Most snippets are complete scripts: save them as a `.php` file and run
   `php file.php`. Where output matters, it is shown in a `text` block right after the code.
-- **Do the exercises.** Every chapter ends with 3–6 exercises from easy to hard. Solutions are hidden in collapsible
-  `<details>` blocks. Try first, then compare.
+- **Do the exercises.** Every chapter ends with 3–6 exercises from easy to hard. Solutions are hidden in
+  collapsible "Solution" sections. Try first, then compare.
 - **Keep the manual open.** The official manual at <https://www.php.net/manual/en/> is excellent. Every function in
   this tutorial has a page there (`https://www.php.net/<function_name>` jumps straight to it).
 

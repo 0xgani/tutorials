@@ -13,6 +13,7 @@ use Bookshelf\Http\Response;
 use Bookshelf\Http\Route;
 use Bookshelf\Support\Clock;
 use Bookshelf\Web\View;
+use LogicException;
 
 final readonly class LoanController
 {
@@ -28,7 +29,7 @@ final readonly class LoanController
     #[Route('GET', '/loans', Access::Member)]
     public function mine(Member $member): Response
     {
-        $loans = $this->loans->openLoansOf($member->id);
+        $loans = $this->loans->openLoansOf($member->id ?? throw new LogicException('A logged-in member has an id'));
 
         return $this->view->page('My loans', 'loans', [
             'loans' => $loans,

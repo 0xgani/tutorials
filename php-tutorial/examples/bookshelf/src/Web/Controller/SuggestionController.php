@@ -45,7 +45,7 @@ final readonly class SuggestionController
         if ($values['author'] === '') {
             $errors['author'] = 'Please enter the author.';
         }
-        $isbn = preg_replace('/[\s-]+/', '', $values['isbn']);
+        $isbn = preg_replace('/[\s-]+/', '', $values['isbn']) ?? '';
         if ($isbn !== '' && !Isbn::isValid($isbn)) {
             $errors['isbn'] = 'That is not a valid ISBN-13. Leave it empty if you are unsure.';
         }

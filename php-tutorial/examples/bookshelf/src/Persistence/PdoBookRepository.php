@@ -70,7 +70,7 @@ final readonly class PdoBookRepository implements BookRepository
         $statement->bindValue('offset', $offset, PDO::PARAM_INT);
         $statement->execute();
 
-        return array_map($this->toBook(...), $statement->fetchAll(PDO::FETCH_ASSOC));
+        return array_values(array_map($this->toBook(...), $statement->fetchAll(PDO::FETCH_ASSOC)));
     }
 
     public function count(string $text = '', ?Genre $genre = null): int
