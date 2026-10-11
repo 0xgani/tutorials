@@ -64,6 +64,15 @@ final class WebTest extends TestCase
         self::assertSame('/login?next=%2Floans', $response->header('Location'));
     }
 
+    public function testTheHealthCheckReportsOk(): void
+    {
+        $response = $this->get('/health');
+
+        self::assertSame(200, $response->status);
+        self::assertSame('{"status":"ok"}', $response->body);
+        self::assertSame('no-store', $response->header('Cache-Control'));
+    }
+
     public function testAPostWithoutACsrfTokenIsRejected(): void
     {
         $response = $this->handle(new Request('POST', '/suggest', body: ['title' => 'Emma', 'author' => 'Jane Austen']));

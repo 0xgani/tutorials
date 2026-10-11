@@ -31,7 +31,8 @@ $root = dirname(__DIR__);
 $settings = [
     'debug' => getenv('BOOKSHELF_DEBUG') === '1',
     'timezone' => getenv('BOOKSHELF_TIMEZONE') ?: 'Europe/Berlin',
-    'https' => ($_SERVER['HTTPS'] ?? 'off') !== 'off',
+    // Behind a proxy that terminates TLS, PHP sees plain HTTP; BOOKSHELF_HTTPS=1 says the site is HTTPS anyway.
+    'https' => getenv('BOOKSHELF_HTTPS') === '1' || ($_SERVER['HTTPS'] ?? 'off') !== 'off',
 ];
 
 $container = new Container();
@@ -58,6 +59,7 @@ $container->set(Router::class, function (): Router {
     $router->addController(Controller\SuggestionController::class);
     $router->addController(Controller\AuthController::class);
     $router->addController(Controller\LoanController::class);
+    $router->addController(Controller\HealthController::class);
 
     return $router;
 });

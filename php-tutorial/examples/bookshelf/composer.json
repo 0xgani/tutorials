@@ -29,7 +29,10 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "platform": {
+            "php": "8.5.0"
+        }
     },
     "scripts": {
         "test": "phpunit",

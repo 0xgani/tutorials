@@ -1,0 +1,7 @@
+# Keep the build context small, and keep local state and secrets out of images.
+.git
+.env
+vendor/
+var/
+.phpunit.cache/
+.php-cs-fixer.cache

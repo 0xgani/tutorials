@@ -21,6 +21,7 @@ $commands = [
     Command\AddMemberCommand::class,
     Command\SetPasswordCommand::class,
     Command\IsbnCommand::class,
+    Command\OverdueCommand::class,
 ];
 
 $app = new Application('bookshelf', ...array_map($container->get(...), $commands));
