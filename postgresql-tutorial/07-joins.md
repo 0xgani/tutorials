@@ -324,8 +324,8 @@ ORDER BY c.full_name;
 ```
 
 This is **fan-out**: a join returns one row per matching *pair*. Emma bought a fountain pen and a pack of ballpoints
-in the same order, so she appears twice. Adding `DISTINCT` hides the symptom, but the question wasn't "give me all pairs", it was "which customers
-have at least one". That is a **semi-join**, and SQL's direct way to say it is `EXISTS`:
+in the same order, so she appears twice. Adding `DISTINCT` hides the symptom, but the question wasn't "give me all
+pairs", it was "which customers have at least one". That is a **semi-join**, and SQL's direct way to say it is `EXISTS`:
 
 ```sql
 SELECT c.full_name
