@@ -66,8 +66,9 @@ final class Application
         $output->line("Usage: {$this->program} <command> [arguments] [options]");
         $output->line();
         $output->line('Commands:');
+        $width = max(9, ...array_map(strlen(...), array_keys($this->commands)));
         foreach ($this->commands as $name => $command) {
-            $output->line(sprintf('  %-10s %s', $name, $command->description()));
+            $output->line(sprintf("  %-{$width}s  %s", $name, $command->description()));
         }
         $output->line();
         $output->line("Run '{$this->program} <command> --help' for details.");

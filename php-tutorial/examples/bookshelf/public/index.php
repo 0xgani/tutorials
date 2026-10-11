@@ -3,14 +3,17 @@
 declare(strict_types=1);
 
 /*
- * Bookshelf's first web front controller (chapter 16). Every request to the site runs this file.
+ * Bookshelf's first web front controller (chapter 16; chapter 17 moved the data into the database).
+ * Every request to the site runs this file.
  * Chapter 19 replaces this single file with a router, request/response objects and controllers.
  */
 
 use Bookshelf\Domain\Book;
+use Bookshelf\Domain\BookRepository;
 use Bookshelf\Domain\Genre;
 use Bookshelf\Domain\Isbn;
-use Bookshelf\Import\CsvBookReader;
+use Bookshelf\Persistence\Database;
+use Bookshelf\Persistence\PdoBookRepository;
 use Uri\Rfc3986\Uri;
 
 // With PHP's built-in server, let it serve existing files (CSS, images) itself.
@@ -99,27 +102,17 @@ function takeFlash(): ?string
     return $message;
 }
 
-/** @return list<Book> */
-function loadBooks(): array
+/** The database connection, opened on first use and shared for the rest of the request. */
+function database(): Database
 {
-    $books = [];
-    foreach ((new CsvBookReader())->read(ROOT . '/data/books.csv') as $result) {
-        if ($result instanceof Book) {
-            $books[] = $result;
-        }
-    }
+    static $database = null;
 
-    return $books;
+    return $database ??= Database::fromEnvironment(ROOT);
 }
 
-/** @return list<Book> */
-function searchBooks(string $query, ?Genre $genre): array
+function books(): BookRepository
 {
-    return array_values(array_filter(
-        loadBooks(),
-        fn (Book $book): bool => ($genre === null || $book->genre === $genre)
-            && ($query === '' || mb_stripos("{$book->title} {$book->author}", $query) !== false),
-    ));
+    return new PdoBookRepository(database()->pdo);
 }
 
 function stringParam(array $source, string $name, int $maxLength = 200): string
@@ -139,7 +132,7 @@ function showCatalog(): void
     $genre = Genre::tryFrom(stringParam($_GET, 'genre'));
 
     page('Catalog', 'catalog', [
-        'books' => searchBooks($query, $genre),
+        'books' => books()->search($query, $genre),
         'query' => $query,
         'genre' => $genre,
     ]);
@@ -154,7 +147,7 @@ function apiBooks(): void
         return;
     }
 
-    $books = searchBooks(stringParam($_GET, 'q'), $genre);
+    $books = books()->search(stringParam($_GET, 'q'), $genre);
     json([
         'count' => count($books),
         'data' => array_map(fn (Book $book): array => [
@@ -198,15 +191,10 @@ function handleSuggestion(): void
         return;
     }
 
-    $directory = ROOT . '/var';
-    if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
-        throw new RuntimeException("Cannot create $directory");
-    }
-    $file = fopen("$directory/suggestions.csv", 'a');
-    flock($file, LOCK_EX);
-    fputcsv($file, [date(DATE_ATOM), ...array_values($values)], escape: '');
-    flock($file, LOCK_UN);
-    fclose($file);
+    database()->pdo
+        ->prepare('INSERT INTO suggestions (created_at, title, author, isbn, reason)
+                   VALUES (:created_at, :title, :author, :isbn, :reason)')
+        ->execute(['created_at' => gmdate('Y-m-d H:i:s'), 'isbn' => $values['isbn'] === '' ? null : $values['isbn']] + $values);
 
     flash("Thank you! We'll consider \"{$values['title']}\".");
     redirect('/');

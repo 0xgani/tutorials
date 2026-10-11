@@ -4,10 +4,16 @@
 declare(strict_types=1);
 
 use Bookshelf\Cli\Application;
+use Bookshelf\Cli\Command\AddMemberCommand;
 use Bookshelf\Cli\Command\ImportBooksCommand;
 use Bookshelf\Cli\Command\IsbnCommand;
+use Bookshelf\Cli\Command\MigrateCommand;
 use Bookshelf\Cli\Output;
 use Bookshelf\Import\CsvBookReader;
+use Bookshelf\Persistence\Database;
+use Bookshelf\Persistence\Migrator;
+use Bookshelf\Persistence\PdoBookRepository;
+use Bookshelf\Persistence\PdoMemberRepository;
 
 if (PHP_SAPI !== 'cli') {
     exit('This program runs from the command line only.');
@@ -15,9 +21,14 @@ if (PHP_SAPI !== 'cli') {
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
+$root = dirname(__DIR__);
+$database = Database::fromEnvironment($root);
+
 $app = new Application(
     'bookshelf',
-    new ImportBooksCommand(new CsvBookReader()),
+    new MigrateCommand(new Migrator($database, "$root/migrations")),
+    new ImportBooksCommand(new CsvBookReader(), new PdoBookRepository($database->pdo), $database),
+    new AddMemberCommand(new PdoMemberRepository($database->pdo)),
     new IsbnCommand(),
 );
 
