@@ -587,7 +587,7 @@ echo json_encode(['id' => 7, 'title' => 'Dune'], JSON_PRETTY_PRINT), "\n";
 ```
 
 ```text
-{"title":"Café Society","url":"https:\/\/example.org\/b\/1","price":10,"tags":[]}
+{"title":"Caf\u00e9 Society","url":"https:\/\/example.org\/b\/1","price":10,"tags":[]}
 {"title":"Café Society","url":"https://example.org/b/1","price":10.0,"tags":[]}
 ["Dune","Emma"] {"1":"Dune","2":"Emma"}
 {"tags":[],"meta":{}}

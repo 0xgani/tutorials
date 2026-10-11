@@ -304,7 +304,7 @@ echo json_encode($book, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_Q
 
 ```text
 {"title":"</script><script>alert(1)</script>","note":"it's \"new\" & shiny"}
-{"title":"<\/script><script>alert(1)<\/script>","note":"it's "new" & shiny"}
+{"title":"\u003C\/script\u003E\u003Cscript\u003Ealert(1)\u003C\/script\u003E","note":"it\u0027s \u0022new\u0022 \u0026 shiny"}
 ```
 
 The browser's HTML parser ends a `<script>` element at the first `</script>`, without knowing anything about JavaScript
@@ -1409,7 +1409,7 @@ $website = safeUrl($member['website']);
 ```text
 <h2>Eve&quot; onmouseover=&quot;alert(1)</h2>
 <img src="/avatar.png" alt="Eve&quot; onmouseover=&quot;alert(1)">
-<script>const settings = {"theme":"<\/script><script>alert(3)<\/script>"};</script>
+<script>const settings = {"theme":"\u003C\/script\u003E\u003Cscript\u003Ealert(3)\u003C\/script\u003E"};</script>
 ```
 
 The four fixes: `e()` for the text; a scheme check for the link (the leading space doesn't fool the WHATWG parser, and

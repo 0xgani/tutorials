@@ -268,7 +268,8 @@ echo $book->title;         // Error
 ```
 
 ```text
-PHP Fatal error:  Uncaught Error: Typed property Book::$title must not be accessed before initialization
+NULL
+PHP Fatal error:  Uncaught Error: Typed property Book::$title must not be accessed before initialization in demo.php:15
 ```
 
 A typed property without a default value starts in the **uninitialized** state, which is different from `null`:

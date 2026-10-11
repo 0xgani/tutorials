@@ -296,6 +296,7 @@ $member->displayName = 'x';   // Error: Property Member::$displayName is read-on
 string(12) "Ada Lovelace"
 string(15) "ada@example.org"
 string(30) "Ada Lovelace <ada@example.org>"
+PHP Fatal error:  Uncaught Error: Property Member::$displayName is read-only in demo.php:35
 ```
 
 How hooks work:

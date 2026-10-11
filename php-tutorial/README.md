@@ -133,3 +133,8 @@ Snippets without a marker are meant to be learned.
 - PHP files start with `<?php` and, from chapter 7 onwards, usually with `declare(strict_types=1);`. Short snippets that
   are clearly fragments of a larger file leave both out.
 - When output contains a file path, it is shortened to the file name, e.g. `in /path/to/demo.php on line 3`.
+- Warnings and errors are shown the way the command line prints them with `display_errors` off and `log_errors` on
+  (the default of many Linux packages): `PHP Warning:  Undefined variable $missing in demo.php on line 3`. With the
+  development settings from chapter 1 (`display_errors = On`), the same message also appears as
+  `Warning: Undefined variable $missing in ...`, so you may see it twice. Uncaught exceptions are sometimes shortened
+  to their first line; PHP also prints the stack trace.
