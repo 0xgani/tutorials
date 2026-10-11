@@ -1,0 +1,36 @@
+# Bookshelf in production-like containers:
+#   docker compose up -d --build
+#   docker compose run --rm app php bin/bookshelf db:migrate
+# then open http://localhost:8080
+name: bookshelf
+
+services:
+  app:
+    build:
+      context: .
+      target: app
+    environment:
+      BOOKSHELF_TIMEZONE: Europe/Berlin
+      # Set to "1" when the site is served over HTTPS by a proxy in front of nginx.
+      BOOKSHELF_HTTPS: "0"
+    volumes:
+      - data:/srv/bookshelf/var
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      target: web
+    ports:
+      - "8080:80"
+    depends_on:
+      - app
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  data:

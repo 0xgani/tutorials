@@ -1,0 +1,9 @@
+parameters:
+    level: 8
+    phpVersion: 80500
+    paths:
+        - bin/bookshelf
+        - config
+        - public
+        - src
+        - tests

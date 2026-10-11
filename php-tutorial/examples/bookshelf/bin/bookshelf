@@ -1,0 +1,29 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Bookshelf\Cli\Application;
+use Bookshelf\Cli\Command;
+use Bookshelf\Cli\Output;
+
+if (PHP_SAPI !== 'cli') {
+    exit('This program runs from the command line only.');
+}
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$container = require dirname(__DIR__) . '/config/container.php';
+
+$commands = [
+    Command\MigrateCommand::class,
+    Command\ImportBooksCommand::class,
+    Command\AddMemberCommand::class,
+    Command\SetPasswordCommand::class,
+    Command\IsbnCommand::class,
+    Command\OverdueCommand::class,
+];
+
+$app = new Application('bookshelf', ...array_map($container->get(...), $commands));
+
+exit($app->run($argv, new Output()));
