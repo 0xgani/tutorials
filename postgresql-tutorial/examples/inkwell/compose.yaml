@@ -1,0 +1,45 @@
+# Optional: PostgreSQL 18 and the API in containers (chapter 24).
+#   docker compose up -d
+#   docker compose exec db psql -U inkwell_migrate -d inkwell_dev -f /inkwell/db/seed.sql   # sample data, once
+#   curl http://localhost:3000/products
+# The development passwords below match db/roles.sql. Never use them for anything real.
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_PASSWORD: postgres-dev-password
+    ports:
+      - "127.0.0.1:5432:5432"   # change the first 5432 if PostgreSQL already runs on your machine
+    volumes:
+      - pgdata:/var/lib/postgresql   # PostgreSQL 18+ images: mount the parent directory (chapter 1)
+      - ./db:/inkwell/db:ro
+      - ./db/docker-init.sh:/docker-entrypoint-initdb.d/inkwell.sh:ro
+    healthcheck:
+      # -h 127.0.0.1: during first start the image runs a temporary server on the Unix socket only, which a
+      # socket check would already report as ready while docker-init.sh is still running.
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", "inkwell_dev"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  api:
+    image: node:24-alpine
+    working_dir: /app/api
+    # exec: node becomes the main process and receives SIGTERM on "docker compose stop" (graceful shutdown).
+    command: sh -c "npm ci --omit=dev && node scripts/migrate.js && exec node src/server.js"
+    environment:
+      DATABASE_URL: postgresql://inkwell_app:app-dev-password@db:5432/inkwell_dev
+      MIGRATION_DATABASE_URL: postgresql://inkwell_migrate:migrate-dev-password@db:5432/inkwell_dev
+      PORT: "3000"
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - .:/app
+      - api_node_modules:/app/api/node_modules   # keep the container's node_modules out of your checkout
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  api_node_modules:
