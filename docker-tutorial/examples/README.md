@@ -16,6 +16,7 @@ self-contained project as it stands at the end of the chapter named in its direc
 | [`ch17-observability/`](ch17-observability/) | 17 | Resource limits on every service, rotated logs, pino structured logging with request IDs, a Prometheus `/metrics` endpoint, a Valkey memory cap |
 | [`ch18-production/`](ch18-production/) | 18 | nginx with TLS in front of two API containers, separate networks, `deploy.sh` for zero-downtime updates and rollbacks, `backup.sh` |
 | [`ch21-swarm/`](ch21-swarm/) | 21 | Snip as a Docker Swarm stack: overlay networks, a migration job, rolling updates with automatic rollback, secrets and configs |
+| [`snip/`](snip/) | 22 | The finished capstone: everything above, a signed-image check in `deploy.sh`, `verify-backup.sh`, a complete CI/CD workflow, and an operations runbook in its README |
 
 Build and run any of them from inside its directory, for example:
 

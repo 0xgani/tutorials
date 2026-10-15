@@ -576,8 +576,8 @@ a server that failed for 10 seconds (`max_fails=1` and `fail_timeout=10s` are th
 stop inside that window, nginx has no server it's willing to use, and *every* request fails until the bench ends. A
 first version of this script stopped the old containers together: two of eight test deploys lost thousands of
 requests that way (16,303 in the worst). Stopping them one at a time, 6 seconds apart, always leaves a container
-serving. Over six deploys with the final script, 2 requests out of about 190,000 failed: POSTs caught in the instant
-an old container closed its connections, which nginx can't safely retry. Chapter 22 looks at that last gap.
+serving. Over six deploys with the final script, 2 requests out of about 190,000 failed: POSTs caught at the moment
+an old container went away, which nginx can't safely retry. Chapter 22 looks at that last gap.
 
 **When the new version is broken**, the script stops before touching the old containers. An image whose API can't
 start:
