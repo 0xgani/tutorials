@@ -1,0 +1,57 @@
+# Development setup, merged automatically by `docker compose` when this file exists.
+#   docker compose up --watch       start everything and sync source changes into the containers
+# Production runs with an explicit -f compose.yaml -f compose.prod.yaml instead.
+
+x-dev: &dev
+  build:
+    target: dev
+  image: snip:dev
+  read_only: false              # Compose Watch writes synced files into /app
+  develop:
+    watch:
+      # Source and migrations: copy changed files into the container; node --watch restarts.
+      - action: sync
+        path: ./src
+        target: /app/src
+      - action: sync
+        path: ./migrations
+        target: /app/migrations
+      # New dependencies: rebuild the image and recreate the container.
+      - action: rebuild
+        path: package-lock.json
+
+services:
+  api:
+    <<: *dev
+    command: ["node", "--watch", "--inspect=0.0.0.0:9229", "src/server.js"]
+    ports:
+      - "127.0.0.1:3000:3000"   # the API directly, without nginx
+      - "127.0.0.1:9229:9229"   # Node.js inspector, for your debugger. Never publish it beyond 127.0.0.1.
+    environment:
+      NODE_ENV: development
+    deploy:
+      replicas: 1               # one container: the ports above can only be published once
+    # The dev image has no HEALTHCHECK, and nginx waits for a healthy API.
+    healthcheck:
+      test: ["CMD", "node", "src/healthcheck.js"]
+      interval: 10s
+      timeout: 3s
+      start_period: 30s
+      start_interval: 1s
+
+  worker:
+    <<: *dev
+    command: ["node", "--watch", "src/worker.js"]
+
+  migrate:
+    build:
+      target: dev
+    image: snip:dev
+
+  db:
+    ports:
+      - "127.0.0.1:5432:5432"   # for a database GUI on your machine
+
+  valkey:
+    ports:
+      - "127.0.0.1:6379:6379"

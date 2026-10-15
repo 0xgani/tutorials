@@ -14,6 +14,7 @@ self-contained project as it stands at the end of the chapter named in its direc
 | [`ch14-ci/`](ch14-ci/) | 14 | A cross-building multi-platform Dockerfile, `docker-bake.hcl`, and a GitHub Actions workflow in `.github/workflows/ci.yml` |
 | [`ch16-hardened/`](ch16-hardened/) | 16 | Every service hardened: no capabilities beyond what each needs, no-new-privileges, read-only root filesystems |
 | [`ch17-observability/`](ch17-observability/) | 17 | Resource limits on every service, rotated logs, pino structured logging with request IDs, a Prometheus `/metrics` endpoint, a Valkey memory cap |
+| [`ch18-production/`](ch18-production/) | 18 | nginx with TLS in front of two API containers, separate networks, `deploy.sh` for zero-downtime updates and rollbacks, `backup.sh` |
 
 Build and run any of them from inside its directory, for example:
 
