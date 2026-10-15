@@ -146,6 +146,9 @@ import pg from 'pg';
 // service name of the database ("db").
 export async function createPgStore(connectionString) {
   const pool = new pg.Pool({ connectionString, max: 10 });
+  // An idle connection that the server closes (a database restart, a failover) emits
+  // 'error' on the pool; without a listener, Node.js treats it as a crash.
+  pool.on('error', (err) => console.error(`database: ${err.message}`));
   await waitForDatabase(pool);
   // Chapter 11 moves schema changes into a separate migration job.
   await pool.query(`
@@ -236,12 +239,15 @@ process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 ```
 
-Two details matter for containers:
+Three details matter for containers:
 
 - **The retry loop.** Containers start in parallel and PostgreSQL needs a second or two to initialize. Without the
   retry, the first `SELECT 1` fails with `ECONNREFUSED` and the app crashes. Chapter 11 adds a proper healthcheck so
   Compose waits for the database, but an app that tolerates a briefly missing dependency is a good idea anyway:
   databases restart, fail over and get upgraded while the app keeps running.
+- **The pool's `error` listener.** When PostgreSQL restarts, it closes the pool's idle connections, and the pool
+  reports that as an `error` event. An `error` event without a listener crashes a Node.js process, so one database
+  restart would take the API down with it. With the listener, the pool simply opens new connections on the next query.
 - **Closing the pool on SIGTERM.** `pool.end()` closes the database connections cleanly instead of leaving PostgreSQL
   to notice dead sockets.
 

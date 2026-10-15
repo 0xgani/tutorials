@@ -5,6 +5,9 @@ import pg from 'pg';
 // service name of the database ("db").
 export async function createPgStore(connectionString) {
   const pool = new pg.Pool({ connectionString, max: 10 });
+  // An idle connection that the server closes (a database restart, a failover) emits
+  // 'error' on the pool; without a listener, Node.js treats it as a crash.
+  pool.on('error', (err) => console.error(`database: ${err.message}`));
   await waitForDatabase(pool);
   // Chapter 11 moves schema changes into a separate migration job.
   await pool.query(`
