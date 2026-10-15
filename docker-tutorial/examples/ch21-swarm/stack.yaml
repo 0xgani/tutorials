@@ -1,0 +1,157 @@
+# Snip on Docker Swarm (chapter 21). Same images and settings as chapter 18, as a stack.
+#   docker swarm init                          once, on the first manager
+#   ./create-secrets.sh && ./create-dev-cert.sh
+#   docker node update --label-add snip.db=true <node>   the node that keeps the database's volume
+#   docker stack deploy -c stack.yaml snip     create or update everything
+#   docker service update --image registry.example.com/snip:1.11 snip_api   a rolling update
+# Differences from Compose: no build (images come from a registry), no depends_on (services
+# retry until their dependencies are up), secrets and configs live in the swarm, and networks
+# are overlays that span every node.
+
+x-snip: &snip
+  image: ${SNIP_IMAGE:-registry.example.com/snip:1.10}
+  environment: &snip-env
+    DATABASE_URL: postgres://snip@db:5432/snip
+    DATABASE_PASSWORD_FILE: /run/secrets/db_password
+    VALKEY_URL: redis://valkey:6379
+    NODE_OPTIONS: --max-old-space-size-percentage=60
+  secrets: [db_password]
+  read_only: true
+  cap_drop: [ALL]
+  networks: [backend]
+
+services:
+  api:
+    <<: *snip
+    environment:
+      <<: *snip-env
+      BASE_URL: ${BASE_URL:-https://localhost:8443}
+    networks: [backend, edge]
+    deploy:
+      replicas: 2
+      resources:
+        limits: { cpus: "1", memory: 256M, pids: 100 }
+      # Rolling updates: one container at a time, the new one started (and healthy) before
+      # the old one stops, and an automatic rollback if the new version doesn't become healthy.
+      update_config:
+        parallelism: 1
+        order: start-first
+        failure_action: rollback
+        monitor: 30s
+      rollback_config:
+        parallelism: 1
+        order: start-first
+      restart_policy:
+        condition: any
+        delay: 2s
+
+  worker:
+    <<: *snip
+    command: ["src/worker.js"]
+    healthcheck:
+      disable: true
+    deploy:
+      replicas: 2
+      resources:
+        limits: { cpus: "0.5", memory: 128M, pids: 50 }
+
+  # A job: runs to completion once per deploy. The API starts at the same time and
+  # retries its database connection until the schema exists.
+  migrate:
+    <<: *snip
+    command: ["src/migrate.js"]
+    healthcheck:
+      disable: true
+    deploy:
+      mode: replicated-job
+      restart_policy:
+        condition: on-failure
+        max_attempts: 10
+
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: snip
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: snip
+    secrets: [db_password]
+    volumes:
+      - pgdata:/var/lib/postgresql
+    networks: [backend]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "snip", "-d", "snip"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+    deploy:
+      replicas: 1
+      # A local volume exists on one node only: pin the database to that node.
+      placement:
+        constraints: [node.labels.snip.db == true]
+      resources:
+        limits: { cpus: "2", memory: 1G }
+
+  valkey:
+    image: valkey/valkey:9-alpine
+    command: ["valkey-server", "--appendonly", "yes",
+              "--maxmemory", "96mb", "--maxmemory-policy", "volatile-lru"]
+    volumes:
+      - valkeydata:/data
+    networks: [backend]
+    deploy:
+      placement:
+        constraints: [node.labels.snip.db == true]
+      resources:
+        limits: { cpus: "0.5", memory: 256M }
+
+  nginx:
+    image: nginx:1.31-alpine
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    configs:
+      - source: nginx_conf
+        target: /etc/nginx/nginx.conf
+    secrets:
+      - source: tls_cert
+        target: /etc/nginx/certs/fullchain.pem
+      - source: tls_key
+        target: /etc/nginx/certs/privkey.pem
+    read_only: true
+    volumes:
+      - { type: tmpfs, target: /var/cache/nginx }
+      - { type: tmpfs, target: /run }
+      - { type: tmpfs, target: /tmp }
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETGID, SETUID]
+    networks: [edge]
+    deploy:
+      replicas: 2
+      update_config:
+        order: start-first
+
+volumes:
+  pgdata:
+  valkeydata:
+
+networks:
+  backend:
+    driver: overlay
+  edge:
+    driver: overlay
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  tls_cert:
+    file: ./certs/fullchain.pem
+  tls_key:
+    file: ./certs/privkey.pem
+
+configs:
+  nginx_conf:
+    # Configs and secrets can't be changed once created. To roll out a new nginx.conf,
+    # bump the version in the name: the stack creates a new config and updates nginx.
+    name: snip_nginx_conf_v1
+    file: ./nginx/nginx.conf
