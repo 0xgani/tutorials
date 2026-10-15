@@ -1,0 +1,9 @@
+# Development additions, merged automatically by `docker compose` when this file exists.
+# Production runs with an explicit -f compose.yaml -f compose.prod.yaml instead.
+services:
+  db:
+    ports:
+      - "127.0.0.1:5432:5432"   # for a database GUI on your machine
+  valkey:
+    ports:
+      - "127.0.0.1:6379:6379"

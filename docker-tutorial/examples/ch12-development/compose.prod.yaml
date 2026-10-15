@@ -1,0 +1,9 @@
+# Production differences: docker compose -f compose.yaml -f compose.prod.yaml up -d
+services:
+  api:
+    environment:
+      BASE_URL: https://snip.example.com
+      NODE_OPTIONS: --max-old-space-size=192
+  worker:
+    deploy:
+      replicas: 2

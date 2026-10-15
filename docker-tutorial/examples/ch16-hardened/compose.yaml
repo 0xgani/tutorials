@@ -1,0 +1,137 @@
+# Snip, chapter 16: every service hardened: no capabilities it doesn't need, no privilege escalation,
+# read-only root filesystems.
+#   cp .env.example .env                once: the variables compose.yaml needs
+#   ./create-secrets.sh                 once: generates secrets/db_password.txt
+#   docker compose up --watch           development: everything, with source changes synced (see compose.override.yaml)
+#   docker compose -f compose.yaml up -d --build   the production image, without the development overrides
+#   docker compose run --rm psql        a psql shell (the "tools" profile)
+#   docker compose up -d --scale worker=3
+name: snip
+
+# Settings shared by the three services that run the Snip image.
+x-snip: &snip
+  build: .
+  image: snip:1.8
+  restart: unless-stopped
+  environment: &snip-env
+    DATABASE_URL: postgres://snip@db:5432/snip
+    DATABASE_PASSWORD_FILE: /run/secrets/db_password
+    VALKEY_URL: redis://valkey:6379
+  secrets:
+    - db_password
+  # Hardening (chapter 16). Snip needs no Linux capabilities at all, never writes outside
+  # its volumes, and has no setuid programs it should be able to use.
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+
+services:
+  api:
+    <<: *snip
+    ports:
+      - "127.0.0.1:${SNIP_PORT:-3000}:3000"
+    environment:
+      <<: *snip-env
+      BASE_URL: ${BASE_URL:-http://localhost:3000}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      valkey:
+        condition: service_healthy
+
+  worker:
+    <<: *snip
+    command: ["src/worker.js"]
+    healthcheck:
+      disable: true             # the image's HEALTHCHECK probes the API's port
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      valkey:
+        condition: service_healthy
+
+  migrate:
+    <<: *snip
+    command: ["src/migrate.js"]
+    restart: "no"               # a job: run once, exit
+    healthcheck:
+      disable: true
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    # The entrypoint starts as root to fix ownership of the data directory, then switches to the
+    # postgres user: that needs these capabilities, and nothing else.
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    tmpfs:
+      - /var/run/postgresql
+      - /tmp
+    environment:
+      POSTGRES_USER: snip
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: snip
+    secrets:
+      - db_password
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      # -h 127.0.0.1: during first-time initialization PostgreSQL only listens on its Unix
+      # socket, so a TCP check stays unhealthy until the real server is up.
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "snip", "-d", "snip"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+      start_interval: 1s
+
+  valkey:
+    image: valkey/valkey:9-alpine
+    restart: unless-stopped
+    # The entrypoint fixes ownership of /data as root (CHOWN, and DAC_OVERRIDE to look inside the
+    # valkey-owned appendonlydir on restarts), then switches to the valkey user (SETGID, SETUID).
+    # tini, running as root, forwards docker stop's SIGTERM to the valkey user's process (KILL).
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, KILL, SETGID, SETUID]
+    security_opt: [no-new-privileges:true]
+    read_only: true
+    command: ["valkey-server", "--appendonly", "yes"]
+    volumes:
+      - valkeydata:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+      start_interval: 1s
+
+  # docker compose run --rm psql
+  psql:
+    image: postgres:18-alpine
+    profiles: [tools]
+    # psql can't read a password file directly, so a tiny shell wrapper reads the secret.
+    entrypoint: ["sh", "-c", "PGPASSWORD=$$(cat /run/secrets/db_password) exec psql \"$$@\"", "psql"]
+    environment:
+      PGHOST: db
+      PGUSER: snip
+      PGDATABASE: snip
+    secrets:
+      - db_password
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  valkeydata:
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt   # created by ./create-secrets.sh; never committed

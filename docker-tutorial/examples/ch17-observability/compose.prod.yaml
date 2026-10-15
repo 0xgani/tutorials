@@ -1,0 +1,8 @@
+# Production differences: docker compose -f compose.yaml -f compose.prod.yaml up -d
+services:
+  api:
+    environment:
+      BASE_URL: https://snip.example.com
+  worker:
+    deploy:
+      replicas: 2

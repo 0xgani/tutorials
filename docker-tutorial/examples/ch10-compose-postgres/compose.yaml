@@ -1,0 +1,31 @@
+# Snip, chapter 10: the API and a PostgreSQL database, started together.
+#   docker compose up -d --build    build the image, create everything, start in the background
+#   docker compose logs -f api      follow the API's logs
+#   docker compose down             stop and remove containers and the network (the volume stays)
+name: snip
+
+services:
+  api:
+    build: .
+    image: snip:1.3
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      DATABASE_URL: postgres://snip:snip@db:5432/snip
+      BASE_URL: http://localhost:3000
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: snip
+      POSTGRES_PASSWORD: snip   # a real password comes from a secret in chapter 13
+      POSTGRES_DB: snip
+    volumes:
+      - pgdata:/var/lib/postgresql
+    restart: unless-stopped
+
+volumes:
+  pgdata:
