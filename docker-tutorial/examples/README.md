@@ -9,6 +9,7 @@ self-contained project as it stands at the end of the chapter named in its direc
 | [`ch07-production-image/`](ch07-production-image/) | 7 | Health check, tests, and a multi-stage Dockerfile with a test stage and a distroless runtime |
 | [`ch10-compose-postgres/`](ch10-compose-postgres/) | 10 | A PostgreSQL store and a `compose.yaml` for the API and the database |
 | [`ch11-compose-in-depth/`](ch11-compose-in-depth/) | 11 | Valkey cache and click queue, a worker, a migration job, healthchecks, `.env`, profiles and override files (run `cp .env.example .env` first) |
+| [`ch12-development/`](ch12-development/) | 12 | A `dev` stage, Compose Watch, the Node.js inspector, an integration test and a VS Code attach configuration |
 
 Build and run any of them from inside its directory, for example:
 
