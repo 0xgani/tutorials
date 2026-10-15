@@ -39,8 +39,12 @@ done
 
 sleep 6                        # nginx re-resolves "api" every 5 s: let it find the new containers
 echo "stopping the old api containers"
-docker stop $old >/dev/null    # SIGTERM: each finishes its requests and exits (chapter 2)
-docker rm $old >/dev/null
+# One at a time, 6 s apart, so that nginx always has a container it's willing to use.
+for id in $old; do
+  docker stop "$id" >/dev/null # SIGTERM: it finishes its requests and exits (chapter 2)
+  docker rm "$id" >/dev/null
+  sleep 6
+done
 docker compose up -d --no-deps worker
 
 if grep -q '^SNIP_IMAGE=' .env 2>/dev/null; then

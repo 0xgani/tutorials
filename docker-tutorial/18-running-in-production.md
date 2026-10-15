@@ -534,8 +534,12 @@ done
 
 sleep 6                        # nginx re-resolves "api" every 5 s: let it find the new containers
 echo "stopping the old api containers"
-docker stop $old >/dev/null    # SIGTERM: each finishes its requests and exits (chapter 2)
-docker rm $old >/dev/null
+# One at a time, 6 s apart, so that nginx always has a container it's willing to use.
+for id in $old; do
+  docker stop "$id" >/dev/null # SIGTERM: it finishes its requests and exits (chapter 2)
+  docker rm "$id" >/dev/null
+  sleep 6
+done
 docker compose up -d --no-deps worker
 
 if grep -q '^SNIP_IMAGE=' .env 2>/dev/null; then
@@ -558,13 +562,22 @@ starting 2 new api containers next to the 2 old ones
 stopping the old api containers
 deployed snip:1.10.1
 
-{ 'POST 201': 15725, 'GET 302': 15725 }
+{ 'POST 201': 15923, 'GET 302': 15923 }
 ```
 
-Not one failed request out of 31,450. Several pieces from earlier chapters work together here: the healthcheck
+Not one failed request out of 31,846. Several pieces from earlier chapters work together here: the healthcheck
 (chapter 11) says when a new container is ready, graceful shutdown (above) finishes in-flight requests, Docker's DNS
 (chapter 9) drops stopped containers immediately, and nginx's `resolve` and `proxy_next_upstream` cover the moments
 in between.
+
+**Why one at a time.** nginx learns about the new containers from DNS as soon as they start, a moment before Node.js
+listens, so a few early attempts are refused. nginx retries those requests on another container, but it also benches
+a server that failed for 10 seconds (`max_fails=1` and `fail_timeout=10s` are the defaults). If both old containers
+stop inside that window, nginx has no server it's willing to use, and *every* request fails until the bench ends. A
+first version of this script stopped the old containers together: two of eight test deploys lost thousands of
+requests that way (16,303 in the worst). Stopping them one at a time, 6 seconds apart, always leaves a container
+serving. Over six deploys with the final script, 2 requests out of about 190,000 failed: POSTs caught in the instant
+an old container closed its connections, which nginx can't safely retry. Chapter 22 looks at that last gap.
 
 **When the new version is broken**, the script stops before touching the old containers. An image whose API can't
 start:
@@ -763,7 +776,7 @@ node load.mjs 40 & sleep 3; ./deploy.sh snip:1.10; wait
 
 Expect thousands of 502s with `docker compose up -d` and none with `deploy.sh` (this chapter's run: 28,081 failures
 versus 0). If you see a handful of errors with `deploy.sh`, check that nginx's upstream uses `resolve` and that
-`proxy_next_upstream` includes `error`.
+`proxy_next_upstream` includes `error`. (An occasional single lost POST is the race described in chapter 22.)
 
 </details>
 
