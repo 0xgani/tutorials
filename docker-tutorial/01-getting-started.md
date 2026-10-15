@@ -472,7 +472,7 @@ until you **publish** a port. This one-liner starts a tiny HTTP server and maps 
 3000 in the container:
 
 ```bash
-docker run --rm -p 3000:3000 node:24-alpine node -e '
+docker run --rm --init -p 3000:3000 node:24-alpine node -e '
   require("node:http")
     .createServer((req, res) => res.end(`hello from ${require("node:os").hostname()}\n`))
     .listen(3000, () => console.log("listening on 3000"))'
@@ -492,9 +492,12 @@ curl http://localhost:3000
 hello from 8c1d0e5b7a42
 ```
 
-Stop the server with Ctrl+C in the first terminal. (If Ctrl+C does nothing for a while, you have met the PID 1 signal
-problem; chapter 2 explains it and chapter 4 fixes it properly.) Chapter 2 covers `-p` and the other flags of
-`docker run` in detail.
+Stop the server with Ctrl+C in the first terminal. That works thanks to `--init`, which starts a tiny init process as
+PID 1 that passes Ctrl+C on to `node`. Try it without `--init` and Ctrl+C does nothing: the kernel ignores signals
+sent to PID 1 unless the program installed a handler for them, and this one-liner didn't. (Pressing Ctrl+C three times
+makes the `docker` CLI give up and return your prompt, but the container keeps running; `docker ps` shows it and
+`docker rm -f <name>` removes it.) Chapter 2 explains signals and chapter 4 fixes the problem properly in your own
+images. Chapter 2 also covers `-p` and the other flags of `docker run` in detail.
 
 ## What happens when you type `docker run`
 
