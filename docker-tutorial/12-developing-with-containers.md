@@ -57,7 +57,7 @@ RUN --mount=type=cache,target=/home/node/.npm,uid=1000,gid=1000 \
     npm ci
 COPY --chown=node:node . .
 EXPOSE 3000 9229
-CMD ["node", "--watch", "src/server.js"]
+CMD ["node", "--watch-path=src", "src/server.js"]
 ```
 
 Line by line:
@@ -70,8 +70,9 @@ Line by line:
 - **The cache mount** targets the `node` user's npm cache, with matching ownership.
 - **`COPY . .`** copies everything the `.dockerignore` allows, tests included. Add `compose*.yaml` to `.dockerignore`
   so that editing a Compose file doesn't invalidate this layer.
-- **`node --watch`** restarts the process when a file it loaded changes (built in, stable since Node.js 22). No
-  `nodemon` needed.
+- **`node --watch`** restarts the process when a file changes (built in, stable since Node.js 22). No `nodemon`
+  needed. **`--watch-path=src`** makes it watch the whole `src` directory instead of each file the process loaded;
+  that's what keeps it working with Compose Watch, as you'll see below.
 
 The `dev` stage is never part of the production build: `docker build .` builds the last stage (`runtime`) and only
 the stages it depends on, and `dev` isn't one of them.
@@ -99,7 +100,7 @@ x-dev: &dev
 services:
   api:
     <<: *dev
-    command: ["node", "--watch", "--inspect=0.0.0.0:9229", "src/server.js"]
+    command: ["node", "--watch-path=src", "--inspect=0.0.0.0:9229", "src/server.js"]
     ports:
       - "127.0.0.1:9229:9229"   # Node.js inspector, for your debugger. Never publish it beyond 127.0.0.1.
     environment:
@@ -107,7 +108,7 @@ services:
 
   worker:
     <<: *dev
-    command: ["node", "--watch", "src/worker.js"]
+    command: ["node", "--watch-path=src", "src/worker.js"]
 
   migrate:
     build:
@@ -245,10 +246,26 @@ api-1      | SIGTERM received, closing the server
 api-1      | all connections closed, exiting
 api-1      | Debugger listening on ws://0.0.0.0:9229/c3b87473-fd1e-4f83-82b9-b05a22f1c07a
 api-1      | snip listening on port 3000 (node v24.22.0, pid 32)
+worker-1   | Change detected in '/app/src/app.js'
+worker-1   | Restarting 'src/worker.js'
 ```
 
-Both containers received the file, because both watch `./src`. Only the API restarted: `node --watch` watches the
-files the process actually imported, and the worker doesn't import `app.js`.
+Both containers received the file, because both have a rule for `./src`, and both processes restart, because both
+watch the whole `src` directory (the worker restarts for nothing here; that's the price of the fix below).
+
+**Why `--watch-path=src` and not just `--watch`.** A `sync` doesn't write into the existing file: it unpacks a new copy
+over it, which replaces the file (same name, new inode). Plain `node --watch` watches each file the process loaded,
+and after a replacement it's still watching the old, deleted file. The result is subtle: the *first* save of each
+file restarts the process, and every later save of that file is copied into the container but ignored. Measured with
+three saves of `src/app.js`:
+
+```text
+node --watch src/server.js                  3 syncs, 1 restart
+node --watch-path=src src/server.js         3 syncs, 3 restarts
+```
+
+`--watch-path` watches the directory, which sees each new file arrive. (Watch tools built on polling don't have this
+problem, but cost CPU.)
 
 Install a package (`npm install` on the host changes `package-lock.json`), and the `rebuild` rule kicks in:
 
@@ -472,6 +489,7 @@ Watch, the changes arrive as real file writes inside the container, so ordinary 
 - Never bind-mount a host `node_modules` into a Linux container. Mount only source directories, or let Compose Watch
   sync them.
 - Compose Watch (`docker compose up --watch`) syncs source changes and rebuilds the image when dependencies change.
+  Sync replaces files, so watch the directory (`node --watch-path=src`), not the loaded files.
 - Debug with `--inspect=0.0.0.0:9229` and a port published on `127.0.0.1` only; map `remoteRoot` to `/app` in your
   debugger.
 - Run unit tests in the build or with `docker compose run --rm --no-deps`, and integration tests from a container on

@@ -39,7 +39,7 @@ RUN --mount=type=cache,target=/home/node/.npm,uid=1000,gid=1000 \
     npm ci
 COPY --chown=node:node . .
 EXPOSE 3000 9229
-CMD ["node", "--watch", "src/server.js"]
+CMD ["node", "--watch-path=src", "src/server.js"]
 
 # runtime-slim: a Debian slim runtime, for when you need a shell in production
 FROM base AS runtime-slim

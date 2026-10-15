@@ -22,7 +22,7 @@ x-dev: &dev
 services:
   api:
     <<: *dev
-    command: ["node", "--watch", "--inspect=0.0.0.0:9229", "src/server.js"]
+    command: ["node", "--watch-path=src", "--inspect=0.0.0.0:9229", "src/server.js"]
     ports:
       - "127.0.0.1:9229:9229"   # Node.js inspector, for your debugger. Never publish it beyond 127.0.0.1.
     environment:
@@ -30,7 +30,7 @@ services:
 
   worker:
     <<: *dev
-    command: ["node", "--watch", "src/worker.js"]
+    command: ["node", "--watch-path=src", "src/worker.js"]
 
   migrate:
     build:
