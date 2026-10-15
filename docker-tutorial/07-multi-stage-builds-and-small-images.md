@@ -280,11 +280,15 @@ build stage with the right owner and copy it, or (better) mount a volume or a tm
 ```dockerfile
 # A writable directory owned by the runtime user, prepared in a stage that has a shell
 FROM base AS dirs
-RUN mkdir -p /out/data && chown 65532:65532 /out/data
+RUN mkdir -p /out/data
 
 FROM gcr.io/distroless/nodejs24-debian13:nonroot
-COPY --from=dirs /out/data /app/data
+COPY --from=dirs --chown=65532:65532 /out/data /app/data
 ```
+
+The `--chown` matters even though the directory is empty. `COPY` copies a directory's *contents*; the destination
+directory itself is created fresh, owned by root unless `--chown` says otherwise. A `chown` in the earlier stage
+would be lost.
 
 ## Tests as a build stage
 
@@ -617,11 +621,11 @@ full test suite in the Alpine image (not just on your laptop), and watch for DNS
 
 ```dockerfile
 FROM base AS dirs
-RUN mkdir -p /out/exports && chown 65532:65532 /out/exports
+RUN mkdir -p /out/exports
 
 FROM gcr.io/distroless/nodejs24-debian13:nonroot AS runtime
 # ...
-COPY --from=dirs /out/exports /app/exports
+COPY --from=dirs --chown=65532:65532 /out/exports /app/exports
 ```
 
 (b) No Dockerfile change; at run time:
