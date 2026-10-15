@@ -1,0 +1,102 @@
+# Snip, chapter 11: API, worker, migration job, PostgreSQL and Valkey.
+#   cp .env.example .env                once: the variables compose.yaml needs
+#   docker compose up -d --build        everything (compose.override.yaml is merged in automatically)
+#   docker compose run --rm psql        a psql shell (the "tools" profile)
+#   docker compose up -d --scale worker=3
+name: snip
+
+# Settings shared by the three services that run the Snip image.
+x-snip: &snip
+  build: .
+  image: snip:1.4
+  restart: unless-stopped
+  environment: &snip-env
+    DATABASE_URL: postgres://snip:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/snip
+    VALKEY_URL: redis://valkey:6379
+
+services:
+  api:
+    <<: *snip
+    ports:
+      - "127.0.0.1:${SNIP_PORT:-3000}:3000"
+    environment:
+      <<: *snip-env
+      BASE_URL: ${BASE_URL:-http://localhost:3000}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      valkey:
+        condition: service_healthy
+
+  worker:
+    <<: *snip
+    command: ["src/worker.js"]
+    healthcheck:
+      disable: true             # the image's HEALTHCHECK probes the API's port
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      valkey:
+        condition: service_healthy
+
+  migrate:
+    <<: *snip
+    command: ["src/migrate.js"]
+    restart: "no"               # a job: run once, exit
+    healthcheck:
+      disable: true
+    depends_on:
+      db:
+        condition: service_healthy
+        restart: true
+
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: snip
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: snip
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      # -h 127.0.0.1: during first-time initialization PostgreSQL only listens on its Unix
+      # socket, so a TCP check stays unhealthy until the real server is up.
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "snip", "-d", "snip"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+      start_interval: 1s
+
+  valkey:
+    image: valkey/valkey:9-alpine
+    restart: unless-stopped
+    command: ["valkey-server", "--appendonly", "yes"]
+    volumes:
+      - valkeydata:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+      start_interval: 1s
+
+  # docker compose run --rm psql
+  psql:
+    image: postgres:18-alpine
+    profiles: [tools]
+    entrypoint: ["psql"]
+    environment:
+      PGHOST: db
+      PGUSER: snip
+      PGDATABASE: snip
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  valkeydata:
