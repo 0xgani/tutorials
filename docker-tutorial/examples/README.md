@@ -11,6 +11,7 @@ self-contained project as it stands at the end of the chapter named in its direc
 | [`ch11-compose-in-depth/`](ch11-compose-in-depth/) | 11 | Valkey cache and click queue, a worker, a migration job, healthchecks, `.env`, profiles and override files (run `cp .env.example .env` first) |
 | [`ch12-development/`](ch12-development/) | 12 | A `dev` stage, Compose Watch, the Node.js inspector, an integration test and a VS Code attach configuration |
 | [`ch13-config-and-secrets/`](ch13-config-and-secrets/) | 13 | Validated configuration in `src/config.js`, the database password as a Compose secret (run `./create-secrets.sh` first) |
+| [`ch14-ci/`](ch14-ci/) | 14 | A cross-building multi-platform Dockerfile, `docker-bake.hcl`, and a GitHub Actions workflow in `.github/workflows/ci.yml` |
 
 Build and run any of them from inside its directory, for example:
 

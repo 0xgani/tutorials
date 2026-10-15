@@ -1,0 +1,90 @@
+# Snip's CI pipeline (chapter 14). Copy .github/ to the root of your own repository to use it.
+# Pull requests: unit tests, then integration tests against the Compose stack.
+# Pushes to main and version tags: the same, then a multi-platform image pushed to GHCR.
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Unit tests (the Dockerfile's test stage)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: test
+          outputs: type=cacheonly
+          cache-from: type=gha,scope=snip
+          cache-to: type=gha,scope=snip,mode=max
+
+      - name: Start the stack
+        run: |
+          ./create-secrets.sh
+          cp .env.example .env
+          docker compose -f compose.yaml up -d --build --wait
+
+      - name: Integration tests
+        run: |
+          docker run --rm --network snip_default -v "$PWD/test:/test:ro" \
+            -e SNIP_URL=http://api:3000 node:24-alpine node --test /test/integration.test.js
+
+      - name: Show logs
+        if: failure()
+        run: docker compose -f compose.yaml logs
+
+  publish:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute tags and labels
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/snip
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            APP_VERSION=${{ steps.meta.outputs.version }}
+            GIT_SHA=${{ github.sha }}
+          sbom: true
+          provenance: mode=max
+          cache-from: type=gha,scope=snip
+          cache-to: type=gha,scope=snip,mode=max
