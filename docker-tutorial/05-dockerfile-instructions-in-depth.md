@@ -633,7 +633,17 @@ Node version, version labels, a non-root user, a health check and a clean npm ca
 ARG NODE_VERSION=24
 FROM node:${NODE_VERSION}-slim
 
+ENV NODE_ENV=production
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Root owns the code (the app can't modify itself); node only needs to read it.
+COPY src ./src
+
 # Set by CI: docker build --build-arg APP_VERSION=1.2.0 --build-arg GIT_SHA=$(git rev-parse HEAD) .
+# Declared late on purpose: a changed ARG value invalidates every RUN after its declaration (chapter 6).
 ARG APP_VERSION=dev
 ARG GIT_SHA=unknown
 
@@ -642,17 +652,7 @@ LABEL org.opencontainers.image.title="snip" \
       org.opencontainers.image.source="https://github.com/example/snip" \
       org.opencontainers.image.version="${APP_VERSION}" \
       org.opencontainers.image.revision="${GIT_SHA}"
-
-ENV NODE_ENV=production \
-    APP_VERSION=${APP_VERSION}
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
-
-# Root owns the code (the app can't modify itself); node only needs to read it.
-COPY src ./src
+ENV APP_VERSION=${APP_VERSION}
 
 USER node
 EXPOSE 3000
