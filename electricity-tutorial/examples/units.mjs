@@ -22,7 +22,7 @@ export function format(value, unit, digits = 3) {
   if (value === 0 || !Number.isFinite(value)) return `${value} ${unit}`;
   const steps = [[1e9, 'G'], [1e6, 'M'], [1e3, 'k'], [1, ''], [1e-3, 'm'], [1e-6, 'µ'], [1e-9, 'n'], [1e-12, 'p']];
   const abs = Math.abs(value);
-  const [scale, prefix] = steps.find(([f]) => abs >= f) ?? steps[steps.length - 1];
+  const [scale, prefix] = steps.find(([f]) => abs * (1 + 1e-9) >= f) ?? steps[steps.length - 1];
   return `${Number((value / scale).toPrecision(digits))} ${prefix}${unit}`;
 }
 
