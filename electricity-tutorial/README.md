@@ -67,8 +67,9 @@ parts list, power budget and test plan.
 [`examples/`](examples/) contains small, dependency-free Node.js scripts that do the arithmetic from the chapters:
 Ohm's law, LED resistors, power and battery life, voltage dividers, wire voltage drop, RC time constants and the
 capstone's power budget. Each one is introduced in the chapter that teaches the idea, and each chapter also shows the
-same calculation by hand, so you never *need* them. Run any of them with `node examples/<name>.mjs` and no arguments
-to see its usage.
+same calculation by hand, so you never *need* them. Run them from the tutorial's directory, for example
+`node examples/ohm.mjs V=5 R=220`; run one with no arguments to see its usage (`power-budget.mjs` takes none and
+prints the capstone's budget).
 
 ## Markers
 

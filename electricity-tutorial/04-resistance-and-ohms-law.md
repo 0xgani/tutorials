@@ -268,7 +268,7 @@ Here's how to size it:
 
 1. **Choose the current.** Indicator LEDs are bright at 5–10 mA; their datasheet maximum is often 20 mA continuous.
    An Arduino Uno R3 pin is happy at 10 mA. Choose **10 mA** for now. (The newer Uno R4's pins are limited to 8 mA,
-   so chapter 19 lowers this current; modern LEDs are clearly visible at 2–5 mA anyway.)
+   so chapter 17 lowers this current; modern LEDs are clearly visible at 2–5 mA anyway.)
 2. **Find the LED's forward voltage** from its datasheet: about **2.0 V** for this green LED at 10 mA.
 3. **Find the voltage left for the resistor.** In a series loop the voltages add up to the supply (chapter 9), so the
    resistor gets what the LED doesn't take: `5 V − 2.0 V = 3.0 V`.
