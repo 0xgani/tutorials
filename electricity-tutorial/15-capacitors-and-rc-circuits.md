@@ -302,7 +302,7 @@ reduced to about 71 %). With 10 kΩ and 100 nF, `f_c ≈ 159 Hz`. Uses you'll me
 | Where | Part | Why |
 |---|---|---|
 | Across the 12 V input, near the screw terminal | 470 µF, 25 V electrolytic | Bulk reservoir for the pump's starting surge; keeps the 12 V rail from dipping |
-| Input and output of the 5 V buck module | Usually on the module; otherwise 10–22 µF ceramic each | Converters need them to be stable |
+| The board's `VIN` input and its 5 V regulator | Already on the board | Regulators need input and output capacitors to be stable; modules and boards include them |
 | Moisture-sensor analog input to GND | 100 nF ceramic | Filters noise picked up on the 1.5 m probe wires |
 | Across the pump's terminals | 100 nF ceramic | Suppresses electrical noise from the motor's brushes (chapter 16) |
 | Microcontroller supply | Already on the board | Decoupling |

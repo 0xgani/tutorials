@@ -304,9 +304,8 @@ electrolytic capacitor's polarity, the reverse-polarity Schottky's direction, an
 IRLZ44N, left to right facing the printed side); fit the fuse; continuity test between +12 V and GND (no beep) and
 between +5 V and GND (no beep); measure the adapter's voltage (about 12 V) and confirm its polarity.
 
-After power, pump disconnected: measure +12 V at the board (about 11.6 V after the Schottky), +5 V after the buck
-converter, the gate voltage (0 V with the pin LOW, about 5 V when HIGH), and the drain voltage with nothing connected.
-Check nothing is warm. Then connect the pump, run it, measure the 12 V rail during start-up and check that the MOSFET,
+After power, pump disconnected: measure +12 V at the board (about 11.6 V after the Schottky), +5 V on the board's
+5V pin, and the gate voltage (0 V with the pin LOW, about 5 V when HIGH). Check nothing is warm. Then connect the pump, run it, measure the 12 V rail during start-up and check that the MOSFET,
 diode and wires stay cool.
 
 </details>

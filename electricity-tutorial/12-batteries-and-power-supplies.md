@@ -299,17 +299,17 @@ about 1.2 A (chapter 11).
 ```text
    12 V ⎓ 2 A adapter ──┬────────────────────────────► pump (via switch, chapter 18)
    (centre positive)    │
-                        └──[ buck 12 V → 5 V ]───────► board 5 V pin, LED, sensor
-                              module, ≥ 0.5 A
+                        └──► board's VIN (its own 5 V regulator) ──► board, LED, sensor
 ```
 
-- One **12 V, 2 A regulated adapter** covers the pump's surge (1.2 A) plus the electronics (about
-  `0.3 W / (0.9 × 12 V) ≈ 30 mA` from the 12 V side) with margin.
-- A **buck converter module** makes 5 V. A linear regulator from 12 V would waste `(12 − 5) × 0.06 ≈ 0.4 W`
-  continuously: workable, but it's 58 % of the electronics' energy for nothing, and it would get warm in a closed box.
-  (Alternatively, feed 12 V to the Uno R3's jack and let its regulator handle the 60 mA: 0.42 W is within its limit.
-  The buck is the cleaner design, and it's what the capstone uses.)
-- The 12 V line goes directly to the pump circuit, so the pump's surges don't pass through the 5 V regulator.
+- One **12 V, 2 A regulated adapter** covers the pump's surge (1.2 A) plus the electronics (about 60 mA) with margin.
+- The board makes its own 5 V from `VIN`. On an Uno R3 that's its linear regulator, which dissipates about
+  `(12 − 5) × 0.06 ≈ 0.4 W`: within its limit, but 58 % of the electronics' energy is wasted as heat. On an Uno R4 the
+  regulator is a switching one and wastes little. Feeding `VIN` keeps the board's own protection in the path and lets
+  you plug in USB for programming at the same time (the board switches between the two sources safely).
+- For bigger 5 V loads (servos, LED strips) you'd add a separate **buck converter module** instead, sized for them,
+  with its own wiring (exercise 6 below).
+- The 12 V line goes directly to the pump circuit, so the pump's surges don't pass through the board.
 
 **Option B — battery.** Suppose the Plant Station goes on a balcony with no socket. The pump needs 12 V, so a pack
 of three Li-ion cells in series (3S: 11.1 V nominal, 12.6 V full) suits it, with a 3S BMS. Say 2500 mAh. If the
