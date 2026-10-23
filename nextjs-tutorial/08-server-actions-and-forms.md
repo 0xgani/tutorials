@@ -638,9 +638,9 @@ expects, so TypeScript checks the whole chain.
 **Bound values versus closures.** An inline `'use server'` function inside a Server Component can also *capture*
 variables from its surroundings. Next.js encrypts captured values before sending them to the browser and decrypts them
 on the way back, so they can't be read in the page. Bound arguments are sent as they are (the slug above is plain
-text), which is fine for a slug but not for a secret. In neither case should you rely on the value being unmodified: re-check permissions on the server, as `updateEvent`
-does. (When you run several server instances, they must share one encryption key; chapter 20 sets
-`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`.)
+text), which is fine for a slug but not for a secret. In neither case should you rely on the value being unmodified:
+re-check permissions on the server, as `updateEvent` does. (When you run several server instances, they must share one
+encryption key; chapter 20 sets `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`.)
 
 ## Deleting events
 
@@ -1147,8 +1147,8 @@ Some protections are built in. Know them, so you know what they *don't* cover:
 - **Body size limit.** Action requests are capped at 1 MB by default (`experimental.serverActions.bodySizeLimit`).
   Raise it if a form uploads files, and keep it as low as your forms allow.
 - **Unguessable IDs and dead code elimination.** Action IDs are long and generated at build time. New builds usually
-  get new IDs, and even an unchanged codebase gets new ones at least every 14 days. Server Functions that no client code uses get no ID at all, so they can't be
-  called.
+  get new IDs, and even an unchanged codebase gets new ones at least every 14 days. Server Functions that no client
+  code uses get no ID at all, so they can't be called.
 - **Encrypted closures**, covered in the editing section.
 
 None of these knows who your users are. Authentication, authorization and validation are always your job.

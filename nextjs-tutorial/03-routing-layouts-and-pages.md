@@ -505,7 +505,7 @@ and only the list waits. For now, the rule to remember:
 > uncached data must be inside a `<Suspense>` boundary, or the route must explicitly opt out of prerendering.
 
 (The other option in the error, `export const instant = false`, marks a route as allowed to block; chapter 9 explains
-it. `params` counts as request data here because Next.js doesn't know the possible slugs at build time. Chapter 13
+it. `params` counts as request data here because Next.js doesn't know the possible slugs at build time. Chapter 7
 tells it with `generateStaticParams`.)
 
 ### What a missing event looks like now
