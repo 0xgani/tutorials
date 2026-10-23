@@ -541,6 +541,7 @@ HTTP/1.1 200 OK
 Vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch, Accept-Encoding
 x-nextjs-cache: HIT
 x-nextjs-prerender: 1
+link: </_next/static/media/797e433ab948586e-s.p.0r6juujl39pe6.woff2>; rel=preload; as="font"; crossorigin=""; type="font/woff2", </_next/static/media/caa3a2e1cccd8315-s.p.0wgildi0cnwt9.woff2>; rel=preload; as="font"; crossorigin=""; type="font/woff2"
 x-nextjs-stale-time: 300
 X-Powered-By: Next.js
 Cache-Control: s-maxage=31536000
@@ -549,7 +550,8 @@ Content-Type: text/html; charset=utf-8
 ```
 
 `x-nextjs-prerender: 1` and `x-nextjs-cache: HIT` say the server sent the page it saved at build time instead of
-rendering it again. The `Vary` header lists the request headers that the client router sends when it asks for an
+rendering it again. The `link` header tells the browser to start downloading the two Geist font files right away
+(chapter 5). The `Vary` header lists the request headers that the client router sends when it asks for an
 RSC payload instead of HTML (step 10). Chapter 21 looks at all of this in detail.
 
 ### A first look at the static/dynamic rule
